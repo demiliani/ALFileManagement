@@ -251,6 +251,16 @@ codeunit 50100 SDFileMgt
         end;
     end;
 
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeExportItemPicture2(var Item: Record Item)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterExportItemPicture2(var Item: Record Item; FileName: Text)
+    begin
+    end;
+
     procedure ExportItemPicture2(Item: Record Item);
     var
         TenantMedia: Record "Tenant Media";
@@ -265,6 +275,8 @@ codeunit 50100 SDFileMgt
     begin
         if Item.Picture.Count() = 0 then
             exit;
+            
+        OnBeforeExportItemPicture2(Item);
 
         TempBlob.CreateOutStream(ZipStream);
         DataCompression.CreateZipArchive();
@@ -281,8 +293,20 @@ codeunit 50100 SDFileMgt
         TempBlob.CreateInStream(FinalDownloadStream);
         FileName := StrSubstNo('Item_%1.zip', Item.Description);
         DownloadFromStream(FinalDownloadStream, 'Download zip-archive', '', '', FileName);
+        
+        OnAfterExportItemPicture2(Item, FileName);
     end;
 
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeCreateJSON(var SDFiles: Record "SD Files")
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterCreateJSON(var SDFiles: Record "SD Files"; var json: JsonObject; Filename: Text)
+    begin
+    end;
 
     procedure CreateJSON(var SDFiles: Record "SD Files"): JsonObject
     var
@@ -295,6 +319,8 @@ codeunit 50100 SDFileMgt
         JsonText, BlobJsonBase64 : Text;
         token: JsonToken;
     begin
+        OnBeforeCreateJSON(SDFiles);
+        
         json.Add('ID', SDFiles.ID);
         SDFiles.CalcFields(SDFiles.Content);
         SDFiles.Content.CreateInStream(Instr);
@@ -315,6 +341,9 @@ codeunit 50100 SDFileMgt
         SDFiles.Content.CreateOutStream(Outstr);
         Base64Convert.FromBase64(BlobJsonBase64, Outstr);
         SDFiles.Modify();
+        
+        OnAfterCreateJSON(SDFiles, json, Filename);
+        exit(json);
     end;
 
 
