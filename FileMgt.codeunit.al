@@ -146,6 +146,16 @@ codeunit 50100 SDFileMgt
         OnAfterFindAndExportPersistentBlob(Filename, PID);
     end;
 
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeSaveReportAsPDF()
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterSaveReportAsPDF(var Customer: Record Customer; var EmailMsg: Codeunit "Email Message")
+    begin
+    end;
+
     procedure SaveReportAsPDF()
     var
         OutStr: OutStream;
@@ -160,6 +170,8 @@ codeunit 50100 SDFileMgt
         Recipients: List of [Text];
         CCs: List of [Text];
     begin
+        OnBeforeSaveReportAsPDF();
+        
         TempBlob.CreateOutStream(OutStr);
         Customer.SetRange("No.", '10000', '50000');
         IF Customer.FindSet() then begin
@@ -175,10 +187,22 @@ codeunit 50100 SDFileMgt
             TempBlob.CreateInStream(Instr);
             EmailMsg.AddAttachment('Sales.pdf', 'PDF', Instr);
             Email.Send(EmailMsg);
+            
+            OnAfterSaveReportAsPDF(Customer, EmailMsg);
         end;
     end;
 
 
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeExportContactsAsCSV()
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterExportContactsAsCSV(FileName: Text)
+    begin
+    end;
 
     procedure ExportContactsAsCSV()
     var
@@ -188,12 +212,26 @@ codeunit 50100 SDFileMgt
         FileName: Text;
         ExportContact: Xmlport "Export Contact";
     begin
+        OnBeforeExportContactsAsCSV();
+        
         TempBlob.CreateOutStream(OutStr, TextEncoding::UTF8);
         ExportContact.SetDestination(OutStr);
         ExportContact.Export();
         TempBlob.CreateInStream(InStr, TextEncoding::UTF8);
         FileName := 'ContactList.txt';
         DownloadFromStream(InStr, 'Export', '', '', FileName);
+        
+        OnAfterExportContactsAsCSV(FileName);
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeImportItemPictures(var Item: Record Item)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterImportItemPictures(var Item: Record Item; Filename: Text)
+    begin
     end;
 
     //Uploading Item pictures
@@ -202,10 +240,14 @@ codeunit 50100 SDFileMgt
         Filename: Text;
         Instr: InStream;
     begin
+        OnBeforeImportItemPictures(Item);
+        
         if UploadIntoStream('Item picture uploading', '', '', Filename, Instr) then begin
             Clear(Item.Picture);
             Item.Picture.ImportStream(Instr, Filename);
             Item.Modify(true);
+            
+            OnAfterImportItemPictures(Item, Filename);
         end;
     end;
 
