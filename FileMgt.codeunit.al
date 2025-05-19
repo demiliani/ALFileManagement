@@ -1,5 +1,15 @@
 codeunit 50100 SDFileMgt
 {
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeUpload()
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterUpload(var SDFiles: Record "SD Files"; FilePath: Text)
+    begin
+    end;
+
     procedure Upload()
     var
         FilePath: Text;
@@ -7,11 +17,25 @@ codeunit 50100 SDFileMgt
         Instr: InStream;
         SDFiles: Record "SD Files";
     begin
+        OnBeforeUpload();
+        
         File.UploadIntoStream('Upload File', '', '', FilePath, Instr);
         SDFiles.ID := CreateGuid();
         SDFiles.Content.CreateOutStream(OutStr);
         CopyStream(OutStr, Instr);
         SDFiles.Insert();
+        
+        OnAfterUpload(SDFiles, FilePath);
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeDownload(var SDFiles: Record "SD Files")
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterDownload(var SDFiles: Record "SD Files"; Filename: Text)
+    begin
     end;
 
     procedure Download()
@@ -21,9 +45,24 @@ codeunit 50100 SDFileMgt
         Filename: Text;
     begin
         SDFiles.FindFirst();
+        
+        OnBeforeDownload(SDFiles);
+        
         SDFiles.CalcFields(Content);
         SDFiles.Content.CreateInStream(Instr);
         File.DownloadFromStream(Instr, 'Download File', '', '', Filename);
+        
+        OnAfterDownload(SDFiles, Filename);
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeCreateAndDownloadDataFile(var Item: Record Item)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterCreateAndDownloadDataFile(var Item: Record Item; Filename: Text)
+    begin
     end;
 
     procedure CreateAndDownloadDataFile(Item: Record Item)
@@ -34,6 +73,8 @@ codeunit 50100 SDFileMgt
         TempBlob: Codeunit "Temp Blob";
         CR, LF : char;
     begin
+        OnBeforeCreateAndDownloadDataFile(Item);
+        
         CR := 13;
         LF := 10;
         Filename := 'ItemDataFile.txt';
@@ -42,6 +83,18 @@ codeunit 50100 SDFileMgt
         Outstr.WriteText('Description: ' + Item.Description + CR + LF);
         TempBlob.CreateInStream(Instr);
         DownloadFromStream(Instr, '', '', '', Filename);
+        
+        OnAfterCreateAndDownloadDataFile(Item, Filename);
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeImportBlobToPersistentBlob(var Filename: Text; var PID: BigInteger)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterImportBlobToPersistentBlob(var Filename: Text; var PID: BigInteger; var SDFiles: Record "SD Files")
+    begin
     end;
 
     //Table 4151 Persistent Blob
@@ -51,13 +104,27 @@ codeunit 50100 SDFileMgt
         Instr: InStream;
         SDFiles: Record "SD Files";
     begin
+        OnBeforeImportBlobToPersistentBlob(Filename, PID);
+        
         if UploadIntoStream('File upload', '', '', Filename, Instr) then begin
             PID := PersistentBlob.Create();
             PersistentBlob.CopyFromInStream(PID, Instr);
             //Store the blob reference to the original table
             SDFiles.BlobID := PID;
             SDFiles.Insert();
+            
+            OnAfterImportBlobToPersistentBlob(Filename, PID, SDFiles);
         end;
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeFindAndExportPersistentBlob(var Filename: Text; var PID: BigInteger)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterFindAndExportPersistentBlob(var Filename: Text; var PID: BigInteger)
+    begin
     end;
 
     procedure FindAndExportPersistentBlob(var Filename: Text; var PID: BigInteger)
@@ -67,12 +134,16 @@ codeunit 50100 SDFileMgt
         OutStr: OutStream;
         Instr: InStream;
     begin
+        OnBeforeFindAndExportPersistentBlob(Filename, PID);
+        
         if PersistentBlob.Exists(PID) then begin
             TempBlob.CreateOutStream(OutStr);
             PersistentBlob.CopyToOutStream(PID, OutStr);
             TempBlob.CreateInStream(Instr);
             DownloadFromStream(Instr, '', '', '', Filename)
         end;
+        
+        OnAfterFindAndExportPersistentBlob(Filename, PID);
     end;
 
     procedure SaveReportAsPDF()
