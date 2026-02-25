@@ -12,9 +12,9 @@ codeunit 50101 BlobStorageManagement
         ContainerContentText: Text;
     begin
         Authorization := StorageServiceAuthorization.CreateSharedKey(GetSharedKey());
-        ContainerClient.Initialize('MY_STORAGE_ACCOUNT', Authorization);
+        ContainerClient.Initialize(GetStorageAccount(), Authorization);
         //Create container
-        Response := ContainerClient.CreateContainer('mycontainer');
+        Response := ContainerClient.CreateContainer(GetContainerName());
         //List containers
         Response := ContainerClient.ListContainers(Containers);
         if Response.IsSuccessful() then begin
@@ -27,7 +27,7 @@ codeunit 50101 BlobStorageManagement
             Message('Error: %1', Response.GetError());
 
         //Init Blob Client
-        BlobClient.Initialize('MY_STORAGE_ACCOUNT', 'mycontainer', Authorization);
+        BlobClient.Initialize(GetStorageAccount(), GetContainerName(), Authorization);
         //Create a blob (text content)
         Response := BlobClient.PutBlobBlockBlobText('MyBlob', 'This is the content of my blob');
         if not Response.IsSuccessful() then
@@ -48,7 +48,22 @@ codeunit 50101 BlobStorageManagement
         end;
     end;
 
-    local procedure GetSharedKey(): SecretText
+    [NonDebuggable]
+    internal procedure GetSharedKey(): SecretText
+    begin
+
+    end;
+
+
+    [NonDebuggable]
+    internal procedure GetStorageAccount(): Text
+    begin
+
+    end;
+
+
+    [NonDebuggable]
+    internal procedure GetContainerName(): Text
     begin
 
     end;
