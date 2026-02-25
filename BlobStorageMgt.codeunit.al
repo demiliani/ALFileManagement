@@ -11,7 +11,7 @@ codeunit 50101 BlobStorageManagement
         ContainerContent: Record "ABS Container Content";
         ContainerContentText: Text;
     begin
-        Authorization := StorageServiceAuthorization.CreateSharedKey('MY_KEY');
+        Authorization := StorageServiceAuthorization.CreateSharedKey(GetSharedKey());
         ContainerClient.Initialize('MY_STORAGE_ACCOUNT', Authorization);
         //Create container
         Response := ContainerClient.CreateContainer('mycontainer');
@@ -46,6 +46,11 @@ codeunit 50101 BlobStorageManagement
                 //BlobClient.GetBlobAsFile()
                 until ContainerContent.Next() = 0;
         end;
+    end;
+
+    local procedure GetSharedKey(): SecretText
+    begin
+
     end;
 
 

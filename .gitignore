@@ -1,0 +1,28 @@
+# AL Language specific
+.alpackages/
+.alcache/
+.snapshots/
+*.app
+
+# RAD (Rapid Application Development) files
+rad.json
+
+# VS Code settings (optional - uncomment if you want to ignore)
+# .vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+*.temp
+~$*
+
+*.app
